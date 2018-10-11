@@ -67,8 +67,7 @@ int cpf2f(char *f1, char *f2)
 	{
 		if((f1s.st_mode & S_IFMT) == S_IFLNK)
 		{
-			symlink(f1, f2);
-			exit(0);
+			return symlink(f1, f2);
 		}
 	}
 
@@ -152,7 +151,7 @@ int cpd2d(char *f1, char *f2)
 
 	char *f1spare, *f2spare, *new_path_dest, *new_path_src;
 
-	if(strncmp(f1, f2, strlen(f1)) == 0)
+	if(strncmp(f1, f2, strlen(f1)) == 0 && ((f2[strlen(f1)] == '/') || (f2[strlen(f1) - 1] == '\0')))
 	{
 		printf("Can't copy directory into itself\n");
 		exit(1);
