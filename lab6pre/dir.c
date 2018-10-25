@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ext2fs/ext2_fs.h>
+#include <string.h>
 
 #define BLKSIZE 1024
 #define SUPER_OFFSET 1024
@@ -33,21 +34,35 @@ void get_block(int fd, int blk, char buf[ ])
    read(fd, buf, BLKSIZE);
 }
 
+int search(INODE *ip, char *name)
+{
+	char sbuf[BLKSIZE];
+	char *sblk, *sblkcpy;
+	DIR *sdp;
+
+	for(int i = 0; i < (ip->i_size / block_size); i++)
+	{
+		get_block(fd, ip->i_block[i], sbuf);
+		sblk = sbuf;
+		sblkcpy = sblk;
+
+		sdp = (DIR *)sblk;
+
+		while (sblkcpy < (sblk + block_size))
+        {
+            if(strncmp(name, sdp->name, strlen(name)) == 0)
+            {
+            	return sdp->inode;
+            }
+            sblkcpy += sdp->rec_len;       // advance cp by rec_len BYTEs
+            sdp = (DIR*)sblkcpy;           // pull dp along to the next record
+        } 
+	}
+	return 0;
+}
 
 void dir()
 {
-	get_block(fd, 1, buf);
-	sp = (SUPER *)buf;
-
-	if (sp->s_magic != 0xEF53)
-	{
-    	printf("NOT an EXT2 FS\n");
-    	exit(1);
-  	}
-
-	block_size = 1024 << sp->s_log_block_size;
-
-
 	get_block(fd, 2, buf);
 	gp = (GD *)buf;
 
@@ -66,7 +81,7 @@ void dir()
 	INODE ip = inode_table[local_index];
 
 
-	printf("%d\n", ip.i_size);
+	printf("%d\n", search(&ip, "dir1"));
 
 	for(int i = 0; i < (ip.i_size / block_size); i++)
 	{
@@ -103,6 +118,15 @@ int main(int argc, char* argv[])
     	printf("open %s failed\n", disk);
    	 	exit(1);
   	}
+	get_block(fd, 1, buf);
+	sp = (SUPER *)buf;
 
+	if (sp->s_magic != 0xEF53)
+	{
+    	printf("NOT an EXT2 FS\n");
+    	exit(1);
+  	}
+
+	block_size = 1024 << sp->s_log_block_size;
   	dir();
 }
