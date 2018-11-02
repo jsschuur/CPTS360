@@ -300,7 +300,7 @@ void print_file_blocks(INODE *ip)
 
     if(!print_indirect_block((int*)get_block(fd, ip->i_block[12]), 1))
     {
-        free(ip);
+    	printf("\n");
         return;
     }
     putchar('\n');
@@ -312,7 +312,7 @@ void print_file_blocks(INODE *ip)
 
     if(!print_indirect_block((int*)get_block(fd, ip->i_block[13]), 2))
     {
-        free(ip);
+    	printf("\n");
         return;
     }
     putchar('\n');
@@ -324,7 +324,7 @@ void print_file_blocks(INODE *ip)
 
     if(!print_indirect_block((int*)get_block(fd, ip->i_block[14]), 3))
     {
-        free(ip);
+    	printf("\n");
         return;
     }
     putchar('\n');
@@ -353,10 +353,7 @@ void showblock()
     	ip = (INODE *)ibuf + offset;
 		i++;
 	}
-
-    printf("i think it worked\n");
     print_file_blocks(ip);
-
 }
 
 int main(int argc, char *argv[])
