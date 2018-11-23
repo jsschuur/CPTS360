@@ -10,7 +10,7 @@
 #include <errno.h>
 
 #define MAX_BUF_SIZE 256
-#define SERVER_HOST  "localhost"
+#define SERVER_HOST  "10.0.0.53"
 #define SERVER_PORT  1234
 
 #define ENDOFSTREAM  "-----ENDOFSTREAM-----"
