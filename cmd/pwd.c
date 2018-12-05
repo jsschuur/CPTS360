@@ -13,7 +13,6 @@ int rpwd(MINODE *mip, char **path, int size)
 
 	if(mip == root)
 	{
-		put_minode(mip);
 		if(thrown_error == TRUE)
 		{        	
 			return -1;
@@ -99,7 +98,6 @@ int js_pwd(int argc, char *argv[])
 
 	buf[0] = '\0';
 
-	running->cwd->refCount++;
 
 	rpwd(running->cwd, &buf, size);
 	if(thrown_error == TRUE)

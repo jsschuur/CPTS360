@@ -43,9 +43,9 @@ int js_stat(int argc, char *argv[])
 	    }              
 	    printf("Inode: %d Links:%d \n", ino, ip->i_links_count);
 
-	    my_atime = ctime( (time_t)&ip->i_atime);
-	    my_mtime = ctime( (time_t)&ip->i_mtime);
-	    my_ctime = ctime( (time_t)&ip->i_ctime);
+	    my_atime = ctime((long int *)(time_t)&ip->i_atime);
+	    my_mtime = ctime((long int *)(time_t)&ip->i_mtime);
+	    my_ctime = ctime((long int *)(time_t)&ip->i_ctime);
 
 	    printf("Access: %26s", my_atime);
 	    printf("Modify: %26s", my_mtime);

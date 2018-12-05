@@ -101,7 +101,7 @@ int js_symlink(int argc, char *argv[])
 
 	new_mip = get_minode(device, new_ino);
 
-	strcpy(new_mip->ip.i_block, argv[1]);
+	strcpy((char*)new_mip->ip.i_block, argv[1]);
 
 	new_mip->ip.i_mode = 0120777;
 	new_mip->ip.i_size = strlen(argv[1]);
