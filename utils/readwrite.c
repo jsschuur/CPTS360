@@ -349,7 +349,7 @@ int remove_dir_entry_by_name(MINODE *parent_mip, char *name)
 		while(current_ptr < buf + block_size)
 		{
 			//child found
-			if(strcmp(dp->name, name) == 0)
+			if(strncmp(dp->name, name, dp->name_len) == 0)
 			{
 				//only one in block
 				if(current_ptr == buf &&

@@ -17,19 +17,17 @@ int js_chown(int argc, char *argv[])
 	}
 
 	ino = get_inode_number(device, argv[1]);
-	if(thrown_error == TRUE)
+	if(ino < 0)
 	{
+		set_error("File does not exist");
 		return -1;
 	}
 
 	mip = get_minode(device, ino);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
+	
 	if(running->uid != mip->ip.i_uid && running->uid != SUPER_USER)
 	{
+		put_minode(mip);
 		set_error("You don't have permission to do that\n");
 		return -1;
 	}
@@ -40,12 +38,7 @@ int js_chown(int argc, char *argv[])
 	ip->i_uid = new_own;
 
 	mip->dirty = TRUE;
-
 	put_minode(mip);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
 
 	return 0;
 }
