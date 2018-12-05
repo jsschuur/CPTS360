@@ -1,12 +1,8 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <fcntl.h>
+#ifndef _TYPE_H_
+#define _TYPE_H_
+
+
 #include <ext2fs/ext2_fs.h>
-#include <string.h>
-#include <libgen.h>
-#include <sys/stat.h>
-#include <errno.h>
 
 typedef unsigned char  u8;
 typedef unsigned short u16;
@@ -15,26 +11,35 @@ typedef unsigned int   u32;
 typedef struct ext2_super_block SUPER;
 typedef struct ext2_group_desc  GD;
 typedef struct ext2_inode       INODE;
-typedef struct ext2_dir_entry_2 DIR;   
+typedef struct ext2_dir_entry_2 DIR;
 
-#define BLKSIZE  1024
+SUPER *sp;
+GD    *gp;
+INODE *ip;
+DIR   *dp;   
 
-#define SUPER_BLOCK  1
-#define GD_BLOCK 2
-#define ROOT_INODE 2
+#define FREE 0
+#define READY 1
 
-#define FALSE 0;
-#define TRUE 1;
+#define FALSE 0
+#define TRUE 1
+
+#define SUPER_USER 0
+
+#define BLOCK_SIZE 1024
+#define NMINODE    64
+#define NFD        16
+#define NMOUNT      4
+#define NPROC       2
+
+#define SUPER_BLOCK_OFFSET 1
+#define GD_BLOCK_OFFSET 2
 
 #define NUM_DIRECT_BLOCKS 12
 
-#define INITIAL_BUF_SIZE 8
+#define ROOT_INODE 2
 
-#define NMINODE    64
-#define NOFT       64
-#define NFD        10
-#define NMOUNT      4
-#define NPROC       2
+#define INITIAL_BUF_SIZE 8
 
 typedef struct minode{
   INODE ip;
@@ -55,7 +60,11 @@ typedef struct oft{
 typedef struct proc{
   struct proc *next;
   int          pid;
+  int          ppid;
+  int          status;
   int          uid, gid;
   MINODE      *cwd;
   OFT         *fd[NFD];
 }PROC;
+
+#endif
