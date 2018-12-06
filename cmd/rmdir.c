@@ -1,6 +1,14 @@
-#include "../cmd.h"
-#include "../utils/search.h"
 #include <time.h>
+#include <sys/stat.h>
+#include <libgen.h>
+
+#include "../cmd.h"
+#include "../utils/readwrite.h"
+#include "../utils/search.h"
+#include "../utils/bitmap.h"
+#include "../utils/get_put_block.h"
+#include "../utils/error_manager.h"
+
 
 extern PROC *running;
 
@@ -8,7 +16,7 @@ int js_rmdir(int argc, char *argv[])
 {
 
 	int i = 1, j, inode_number, device = running->cwd->dev, parent_ino, my_ino;
-	char buf[BLOCK_SIZE], *current_ptr;
+	char buf[BLOCK_SIZE], *current_ptr, *child;
 	DIR *dp;
 	MINODE *mip, *parent_mip;
 
@@ -20,19 +28,13 @@ int js_rmdir(int argc, char *argv[])
 
 	while(i < argc)
 	{
-		inode_number = get_inode_number(device, argv[i]);
+		inode_number = get_inode_number(argv[i]);
 		if(inode_number < 0)
 		{
 			set_error("File does not exist");
 			return -1;
 		}
-
 		mip = get_minode(device, inode_number);
-		if(thrown_error == TRUE)
-		{
-			put_minode(mip);
-			return -1;
-		}
 
 		if(running->uid != SUPER_USER && 
 			running->uid != mip->ip.i_uid)
@@ -63,13 +65,8 @@ int js_rmdir(int argc, char *argv[])
 			return -1;
 		}
 
-		ip = &mip->ip;
-
-		get_block(device, ip->i_block[0], buf);
-		if(thrown_error == TRUE)
-		{        	
-			return -1;
-		}
+		//get parent inode (the second entry in i_block[0])
+		get_block(mip->dev, mip->ip.i_block[0], buf);
 
 		current_ptr = buf;
 		dp = (DIR*)buf;
@@ -80,29 +77,15 @@ int js_rmdir(int argc, char *argv[])
 		dp = (DIR*)current_ptr;
 
 		parent_ino = dp->inode;
-
 		parent_mip = get_minode(device, parent_ino);
 
-		for(j = 0; j < NUM_DIRECT_BLOCKS && ip->i_block[j] != 0; j++)
-		{
-			deallocate_block(device, ip->i_block[j]);
-			if(thrown_error == TRUE)
-			{        	
-				return -1;
-			}
-		}
+		clear_blocks(mip);
+		deallocate_inode(mip->dev, mip->ino);
+		put_minode(mip);
 
-		deallocate_inode(device, my_ino);
-		if(thrown_error == TRUE)
-		{        	
-			return -1;
-		}
+		child = basename(argv[i]);
 
-		remove_dir_entry(parent_mip, my_ino);
-		if(thrown_error == TRUE)
-		{        	
-			return -1;
-		}
+		remove_dir_entry(parent_mip, child);
 
 		parent_mip->ip.i_links_count--;
 		parent_mip->ip.i_atime = time(0L);
@@ -110,16 +93,7 @@ int js_rmdir(int argc, char *argv[])
 		parent_mip->dirty = TRUE;
 
 		put_minode(parent_mip);
-		if(thrown_error == TRUE)
-		{        	
-			return -1;
-		}
 
-		put_minode(mip);
-		if(thrown_error == TRUE)
-		{        	
-			return -1;
-		}
 
 		i++;
 	}

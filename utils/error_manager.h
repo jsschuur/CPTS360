@@ -1,10 +1,6 @@
 #ifndef _ERROR_MANAGER_H_
 #define _ERROR_MANAGER_H_
 
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-
 #include "type.h"
 
 extern int thrown_error; 

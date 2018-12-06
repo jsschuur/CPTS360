@@ -1,5 +1,17 @@
+#include <sys/stat.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "search.h"
+
+#include "get_put_block.h"
+#include "readwrite.h"
+#include "error_manager.h"
+#include "parse.h"
+
+extern int block_size;
+extern MINODE *root;
+extern PROC *running;
 
 int search(MINODE *mip, const char *name)
 {
@@ -95,9 +107,9 @@ int does_exist(MINODE *mip, const char *name)
 	return 0;
 }
 
-int get_inode_number(int dev, const char *path)
+int get_inode_number(const char *path)
 {
-	int i = 1, ino, num_tokens;
+	int i = 1, ino, num_tokens, device = running->cwd->dev;
 	char **parsed_path_tokens = NULL;
 
 	if(strcmp(path, "/") == 0)
@@ -130,7 +142,7 @@ int get_inode_number(int dev, const char *path)
 	
 	while(i < num_tokens)
 	{
-		ino = search(get_minode(dev, ino), parsed_path_tokens[i]);
+		ino = search(get_minode(device, ino), parsed_path_tokens[i]);
 		if(ino < 0)
 		{
 			free_array(parsed_path_tokens);

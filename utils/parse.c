@@ -1,4 +1,9 @@
+#include <string.h>
+#include <stdlib.h>
+
 #include "parse.h"
+#include "error_manager.h"
+
 
 int parse(const char *input, char *delimiters, char ***buf)
 {

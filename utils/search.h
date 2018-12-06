@@ -2,14 +2,7 @@
 #define _SEARCH_H_
 
 #include "type.h"
-#include "readwrite.h"
-#include "error_manager.h"
-#include "parse.h"
-#include <sys/stat.h>
 
-extern int block_size;
-extern MINODE *root;
-extern PROC *running;
 
 /*-----------------------------------------
 Function: search
@@ -37,7 +30,7 @@ Throws errors?: -native
 				-parse
 				-search
 -----------------------------------------*/
-int get_inode_number(int dev, const char *path);
+int get_inode_number(const char *path);
 
 /*-----------------------------------------
 Function: find_my_name

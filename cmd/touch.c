@@ -2,6 +2,8 @@
 
 #include "../cmd.h"
 #include "../utils/search.h"
+#include "../utils/readwrite.h"
+#include "../utils/error_manager.h"
 
 extern PROC *running;
 
@@ -12,7 +14,7 @@ int js_touch(int argc, char *argv[])
 
 	for(i = 1; i < argc; i++)
 	{
-		target_inode = get_inode_number(device, argv[i]);
+		target_inode = get_inode_number(argv[i]);
 		if(target_inode < 0)
 		{
 			char *my_argv[] = { "creat", argv[i], NULL };

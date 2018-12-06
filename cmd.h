@@ -3,8 +3,7 @@
 
 #define COMMAND_COUNT 13
 
-#include "utils/error_manager.h"
-
+#include "utils/type.h"
 
 
 int (*get_cmd(char *cmd))(int, char**);

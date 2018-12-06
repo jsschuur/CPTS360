@@ -1,5 +1,13 @@
+#include <string.h>
+
 #include "bitmap.h"
+
+#include "get_put_block.h"
 #include "readwrite.h"
+#include "error_manager.h"
+
+extern SUPER *sp;
+extern GD *gp;
 
 int test_bit(char *buf, int bit)
 {
@@ -31,39 +39,11 @@ void clear_bit(char *buf, int bit)
 
 int decFreeBlocks(int dev)
 {
-	char buf[BLOCK_SIZE];
-	SUPER *sp;
-	GD *gp;
-
-	get_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	sp = (SUPER *)buf;
 	sp->s_free_blocks_count--;
-
-	put_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	get_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	gp = (GD*)buf;
 	gp->bg_free_blocks_count--;
-	
-	put_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
+
+	put_block(dev, SUPER_BLOCK_OFFSET, (char*)sp);
+	put_block(dev, GD_BLOCK_OFFSET, (char*)gp);
 
 	return 0;
 }
@@ -71,117 +51,33 @@ int decFreeBlocks(int dev)
 
 int decFreeInodes(int dev)
 {
-	char buf[BLOCK_SIZE];
-	SUPER *sp;
-	GD *gp;
-
-	get_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	sp = (SUPER *)buf;
 	sp->s_free_inodes_count--;
-
-	put_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	get_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	gp = (GD*)buf;
 	gp->bg_free_inodes_count--;
-	
-	put_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
+
+	put_block(dev, SUPER_BLOCK_OFFSET, (char*)sp);
+	put_block(dev, GD_BLOCK_OFFSET, (char*)gp);
 
 	return 0;
 }
 
 int incFreeBlocks(int dev)
 {
-	char buf[BLOCK_SIZE];
-	SUPER *sp;
-	GD *gp;
-
-	get_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	sp = (SUPER *)buf;
 	sp->s_free_blocks_count++;
-
-	put_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	get_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	gp = (GD*)buf;
 	gp->bg_free_blocks_count++;
-	
-	put_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
+
+	put_block(dev, SUPER_BLOCK_OFFSET, (char*)sp);
+	put_block(dev, GD_BLOCK_OFFSET, (char*)gp);
 
 	return 0;
 }
 
 int incFreeInodes(int dev)
 {
-	char buf[BLOCK_SIZE];
-	SUPER *sp;
-	GD *gp;
-
-	get_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	sp = (SUPER *)buf;
 	sp->s_free_inodes_count++;
-
-	put_block(dev, SUPER_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	get_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	gp = (GD*)buf;
 	gp->bg_free_inodes_count++;
-	
-	put_block(dev, GD_BLOCK_OFFSET, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
+
+	put_block(dev, SUPER_BLOCK_OFFSET, (char*)sp);
+	put_block(dev, GD_BLOCK_OFFSET, (char*)gp);
 
 	return 0;
 }
@@ -205,14 +101,10 @@ int allocate_block(int dev)
 			decFreeBlocks(dev);
 
 			put_block(dev, block_bitmap, buf);
-			if(thrown_error == TRUE)
-			{
-				return -1;
-			}
 			return i + 1;
 		}
 	}
-	set_error("No more free inodes\n");
+	set_error("No more free blocks");
 	return -1;
 }
 
@@ -223,10 +115,6 @@ int allocate_inode(int dev)
 	char buf[BLOCK_SIZE];
 
 	get_block(dev, inode_bitmap, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
 
 	for(i = 0; i < ninodes; i++)
 	{
@@ -236,14 +124,11 @@ int allocate_inode(int dev)
 			decFreeInodes(dev);
 
 			put_block(dev, inode_bitmap, buf);
-			if(thrown_error == TRUE)
-			{
-				return -1;
-			}
+
 			return i + 1;
 		}
 	}
-	set_error("No more free inodes\n");
+	set_error("No more free inodes");
 	return -1;
 }
 
@@ -252,7 +137,7 @@ int deallocate_block(int dev, int block)
 	char buf[BLOCK_SIZE];
 	if(block <= 0)
 	{
-		set_error("block number invalid (bitmap.c)\n");
+		set_error("block number invalid (bitmap.c)");
 		return -1;
 	}
 
@@ -267,6 +152,9 @@ int deallocate_block(int dev, int block)
 
 	put_block(dev, block_bitmap, buf);
 
+	memset(buf, 0, BLOCK_SIZE);
+	put_block(dev, block, buf);
+
 	return 0;
 }
 
@@ -275,7 +163,7 @@ int deallocate_inode(int dev, int ino)
 	char buf[BLOCK_SIZE];
 	if(ino <= 0)
 	{
-		set_error("inode number invalid (bitmap.c)\n");
+		set_error("inode number invalid (bitmap.c)");
 		return -1;
 	}
 

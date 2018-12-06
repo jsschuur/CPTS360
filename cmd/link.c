@@ -3,9 +3,12 @@
 #include <string.h>
 #include <libgen.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "../cmd.h"
 #include "../utils/search.h"
+#include "../utils/readwrite.h"
+#include "../utils/error_manager.h"
 
 extern PROC *running;
 
@@ -23,7 +26,7 @@ int js_link(int argc, char *argv[])
 	}
 
 
-	old_inode = get_inode_number(device, argv[1]);
+	old_inode = get_inode_number(argv[1]);
 	if(old_inode < 0)
 	{
 		set_error("File does not exist");
@@ -48,7 +51,7 @@ int js_link(int argc, char *argv[])
 	child = basename(path);
 	parent = dirname(path);
 
-	parent_inode = get_inode_number(device, parent);
+	parent_inode = get_inode_number(parent);
 	if(parent_inode < 0)
 	{
 		put_minode(old_mip);
@@ -66,7 +69,7 @@ int js_link(int argc, char *argv[])
 		return -1;
 	}
 
-	if(get_inode_number(device, argv[2]) > 0)
+	if(get_inode_number(argv[2]) > 0)
 	{
 		put_minode(parent_mip);
 		put_minode(old_mip);

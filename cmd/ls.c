@@ -1,10 +1,14 @@
+
+#include <string.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <stdio.h>
 
 #include "../cmd.h"
 #include "../utils/readwrite.h"
 #include "../utils/search.h"
-
+#include "../utils/get_put_block.h"
+#include "../utils/error_manager.h"
 
 extern PROC *running;
 extern int block_size;
@@ -109,7 +113,7 @@ int js_ls(int argc, char *argv[])
 
 	while(i < argc)
 	{
-		ino = get_inode_number(device, argv[i]);
+		ino = get_inode_number(argv[i]);
 		if(ino < 0)
 		{	
 			set_error("File does not exist");

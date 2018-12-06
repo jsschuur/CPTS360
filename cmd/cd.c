@@ -1,6 +1,9 @@
+#include <sys/stat.h>
+
 #include "../cmd.h"
 #include "../utils/readwrite.h"
 #include "../utils/search.h"
+#include "../utils/error_manager.h"
 
 extern MINODE *root;
 extern PROC *running;
@@ -24,7 +27,7 @@ int js_cd(int argc, char *argv[])
 		return 0;
 	}
 
-	ino = get_inode_number(device, argv[1]);
+	ino = get_inode_number(argv[1]);
 	if(ino < 0)
 	{
 		set_error("File does not exist");

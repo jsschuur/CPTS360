@@ -1,10 +1,15 @@
 #define _DEFAULT_SOURCE
 
-#include "../cmd.h"
-#include "../utils/search.h"
 #include <time.h>
 #include <string.h>
 #include <libgen.h>
+#include <sys/stat.h>
+
+#include "../utils/readwrite.h"
+#include "../cmd.h"
+#include "../utils/bitmap.h"
+#include "../utils/search.h"
+#include "../utils/error_manager.h"
 
 extern PROC *running;
 
@@ -24,7 +29,7 @@ int js_rm(int argc, char *argv[])
 
 	while(i < argc)
 	{
-		inode_number = get_inode_number(device, argv[i]);
+		inode_number = get_inode_number(argv[i]);
 		if(inode_number < 0)
 		{
 			set_error("File does not exist");
@@ -84,7 +89,7 @@ int js_rm(int argc, char *argv[])
 		child = basename(path);
 		parent = dirname(path);
 
-		parent_ino = get_inode_number(device, parent);
+		parent_ino = get_inode_number(parent);
 		if(thrown_error == TRUE)
 		{
 			put_minode(mip);
@@ -97,9 +102,7 @@ int js_rm(int argc, char *argv[])
 			put_minode(mip);
 			return -1;
 		}
-
-		ip = &mip->ip;
-
+		
 		remove_dir_entry(parent_mip, inode_number);
 		if(thrown_error == TRUE)
 		{   

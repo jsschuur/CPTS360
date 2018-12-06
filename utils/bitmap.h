@@ -7,7 +7,6 @@
 
 extern int block_bitmap, inode_bitmap, nblocks, ninodes;
 
-
 /*-----------------------------------------
 Function: allocate_block
 Use: loads block bitmap, tests each bit in
@@ -50,4 +49,6 @@ Throws errors?: -get_block
 				-incFreeBlocks
 -----------------------------------------*/
 int deallocate_inode(int dev, int ino);
+
+void init_bitmap(int dev);
 #endif

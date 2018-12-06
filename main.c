@@ -11,10 +11,11 @@ MINODE minodes[NMINODE];
 MINODE *root;
 PROC   proc[NPROC], *running;
 
-
-int fd, dev;
 int block_bitmap, inode_bitmap, inode_table_block;
-int nblocks, ninodes, block_size, inode_size, inodes_per_block, iblk;
+int nblocks, ninodes, block_size, inode_size, inodes_per_block;
+
+SUPER *sp;
+GD    *gp;
 
 int thrown_error;
 char *error_message;
@@ -23,7 +24,8 @@ char *disk;
 int main(int argc, char *argv[])
 {
 	char *input_line, **my_argv;
-	int my_argc;
+	int my_argc, fd, dev;
+
 
 	int (*fptr)(int, char**) = NULL;
 
@@ -33,7 +35,7 @@ int main(int argc, char *argv[])
 	}
 	else 
 	{
-		disk = "mydisk";
+		disk = "disk";
 	}
 
 	fd = open(disk, O_RDWR);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
 
 	dev = fd;
 
-	mount_root();
+	mount_root(dev);
 
 	if(thrown_error == TRUE)
 	{

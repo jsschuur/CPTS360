@@ -1,5 +1,10 @@
 #include "error_manager.h"
 
+
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
+
 int check_null_ptr(void *ptr)
 {
 	if(ptr == NULL)
@@ -19,7 +24,7 @@ void set_error(char *message)
 
 void print_error()
 {
-	printf("%s", error_message);
+	printf("%s\n", error_message);
 	thrown_error = FALSE;
 }
 

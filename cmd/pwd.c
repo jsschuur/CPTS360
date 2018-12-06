@@ -1,5 +1,15 @@
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
 #include "../cmd.h"
+
+#include "../utils/readwrite.h"
 #include "../utils/search.h"
+#include "../utils/get_put_block.h"
+#include "../utils/error_manager.h"
+
 
 extern PROC *running;
 extern MINODE *root;
@@ -102,9 +112,12 @@ int js_pwd(int argc, char *argv[])
 	rpwd(running->cwd, &buf, size);
 	if(thrown_error == TRUE)
 	{
+		free(buf);
 		return -1;
 	}
 
 	printf("%s\n", buf);
+
+	free(buf);
 	return 0;
 }

@@ -1,39 +1,21 @@
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "readwrite.h"
+
+#include "get_put_block.h"
+#include "../utils/bitmap.h"
+#include "error_manager.h"
 
 
 extern MINODE minodes[NMINODE];
 extern int block_size, inodes_per_block, inode_table_block;
 extern PROC *running;
 
-int get_block(int dev, int blk, char buf[])
-{
-	if(lseek(dev, (long)BLOCK_SIZE * blk, 0) == -1)
-	{
-		set_error(strerror(errno));
-		return -1;
-	}
-	if(read(dev, buf, BLOCK_SIZE) == -1)
-	{
-		set_error(strerror(errno));
-		return -1;
-	}
-	return 0;
-}
 
-int put_block(int dev, int blk, char buf[])
-{
-	if(lseek(dev, (long)BLOCK_SIZE * blk, 0) == -1)
-	{
-		set_error(strerror(errno));
-		return -1;
-	}
-	if(write(dev, buf, BLOCK_SIZE) == -1)
-	{
-		set_error(strerror(errno));
-		return -1;
-	}
-	return 0;
-}
+
 
 MINODE *get_minode(int dev, int ino)
 {
@@ -74,24 +56,15 @@ MINODE *get_minode(int dev, int ino)
 			offset = (ino - 1) % inodes_per_block;
 
 			get_block(dev, block, buf);
-			if(thrown_error == TRUE)
-			{
-				return NULL;
-			}
-			
-			table = (INODE *)buf;
 
-			ip = (INODE *)malloc(sizeof(INODE));
-
-			*ip = table[offset];
+			ip = (INODE *)buf + offset;
 
 			mip->ip = *ip;
-			free(ip);
 
 			return mip;
 		}
 	}
-	set_error("No more memory inodes\n");
+	set_error((char*)"No more memory inodes\n");
 	return 0;
 }
 
@@ -193,8 +166,8 @@ int enter_dir_entry(MINODE *parent_mip, int inode_number, char *name)
 	{
 		return -1;
 	}
-	parent_ip->i_block[i] = block_number;
 
+	parent_ip->i_block[i] = block_number;
 	parent_ip->i_size += block_size;
 	parent_mip->dirty = TRUE;
 
@@ -221,112 +194,9 @@ int enter_dir_entry(MINODE *parent_mip, int inode_number, char *name)
 	return 0;
 }
 
-int remove_dir_entry(MINODE *parent_mip, int inode_number)
+int remove_dir_entry(MINODE *parent_mip, char *name)
 {
-	int device = running->cwd->dev, i;
-	char buf[BLOCK_SIZE], *current_ptr, *last_ptr, *start, *end;
-	DIR *dp, *prev_dp, *last_dp;
-
-	for(i = 0; i < NUM_DIRECT_BLOCKS; i++)
-	{
-		if(parent_mip->ip.i_block[i] == 0)
-		{
-			break;
-		}
-
-		get_block(device, parent_mip->ip.i_block[i], buf);
-		if(thrown_error == TRUE)
-		{
-			return -1;
-		}
-
-		current_ptr = buf;
-		dp = (DIR *)buf;
-
-		while(current_ptr < buf + block_size)
-		{
-			if(dp->inode == inode_number)
-			{
-				//only one in block
-				if(current_ptr == buf &&
-					current_ptr + dp->rec_len == buf + block_size)
-				{
-					deallocate_block(device, parent_mip->ip.i_block[i]);
-					if(thrown_error == TRUE)
-					{
-						return -1;
-					}
-
-					parent_mip->ip.i_size -= block_size;
-
-					while(parent_mip->ip.i_block[i + 1] && i + 1 < NUM_DIRECT_BLOCKS)
-					{
-						i++;
-
-						get_block(device, parent_mip->ip.i_block[i], buf);
-						if(thrown_error == TRUE)
-						{
-							return -1;
-						}
-						put_block(device, parent_mip->ip.i_block[i - 1], buf);
-						if(thrown_error == TRUE)
-						{
-							return -1;
-						}
-					}
-				}
-				//last entry in block
-				else if(current_ptr + dp->rec_len == buf + block_size)
-				{
-					prev_dp->rec_len += dp->rec_len;
-					put_block(device, parent_mip->ip.i_block[i], buf);
-				}
-				//some middle entry
-				else
-				{
-					last_ptr = current_ptr;
-					while(last_ptr + dp->rec_len < buf + block_size)
-					{
-						last_ptr += dp->rec_len;
-						dp = (DIR *)last_ptr;
-					}
-					dp = (DIR *)current_ptr;
-					last_dp = (DIR *)last_ptr;
-
-					last_dp->rec_len += dp->rec_len;
-
-					start = current_ptr + dp->rec_len;
-					end = buf + block_size;
-					memmove(current_ptr, start, end - start);
-					if(check_null_ptr(current_ptr))
-					{
-						return -1;
-					}
-
-					put_block(device, parent_mip->ip.i_block[i], buf);
-					if(thrown_error == TRUE)
-					{
-						return -1;
-					}
-				}
-
-				parent_mip->dirty = TRUE;
-
-				return 0;
-			}
-
-			prev_dp = dp;
-			current_ptr += dp->rec_len;
-			dp = (DIR *)current_ptr;
-		}
-	}
-	set_error("File does not exist");
-	return -1;
-}
-
-int remove_dir_entry_by_name(MINODE *parent_mip, char *name)
-{
-	int device = running->cwd->dev, i;
+	int device = parent_mip->dev, i;
 	char buf[BLOCK_SIZE], *current_ptr, *last_ptr, *start, *end;
 	DIR *dp, *prev_dp, *last_dp;
 
@@ -426,4 +296,67 @@ int remove_dir_entry_by_name(MINODE *parent_mip, char *name)
 	}
 	set_error("File does not exist");
 	return -1;
+}
+
+//will also clear the data in each block literal
+int clear_blocks(MINODE *mip)
+{
+	int *indirect_block_buf, *double_indirect_block_buf, i, j, device = mip->dev;
+	char block_buf[BLOCK_SIZE], indirect_buf[BLOCK_SIZE];
+
+	//direct blocks
+	for(i = 0; i < NUM_DIRECT_BLOCKS; i++)
+	{
+		if(mip->ip.i_block[i] != 0)
+		{
+			deallocate_block(device, mip->ip.i_block[i]);
+		}
+	}
+
+	//indirect blocks
+	if(mip->ip.i_block[INDIRECT_BLOCK_NUMBER] != 0)
+	{
+		get_block(device, mip->ip.i_block[INDIRECT_BLOCK_NUMBER], block_buf);
+
+		indirect_block_buf = (int *)block_buf;
+
+		for(i = 0; i < BLOCK_NUMBERS_PER_BLOCK; i++)
+		{
+			if(indirect_block_buf[i] != 0)
+			{
+				deallocate_block(device, indirect_block_buf[i]);
+			}
+		}
+		deallocate_block(device, mip->ip.i_block[INDIRECT_BLOCK_NUMBER]);
+	}
+
+	//doubly indirect blocks 
+	if(mip->ip.i_block[DOUBLE_INDIRECT_BLOCK_NUMBER] != 0)
+	{
+		get_block(device, mip->ip.i_block[DOUBLE_INDIRECT_BLOCK_NUMBER], block_buf);
+
+		double_indirect_block_buf = (int *)block_buf;
+
+		for(i = 0; i < BLOCK_NUMBERS_PER_BLOCK; i++)
+		{
+			if(double_indirect_block_buf[i] != 0)
+			{
+				get_block(device, double_indirect_block_buf[i], indirect_buf);
+
+				indirect_block_buf = (int *)indirect_buf;
+
+				for(int j = 0; i < BLOCK_NUMBERS_PER_BLOCK; j++)
+				{
+					if(indirect_block_buf[i] != 0)
+					{
+						deallocate_block(device, indirect_block_buf[i]);
+					}
+				}
+				deallocate_inode(device, double_indirect_block_buf[i]);
+			}
+		}
+		deallocate_block(device, mip->ip.i_block[DOUBLE_INDIRECT_BLOCK_NUMBER]);
+	}
+
+	return 0;
 }

@@ -13,11 +13,6 @@ typedef struct ext2_group_desc  GD;
 typedef struct ext2_inode       INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
-SUPER *sp;
-GD    *gp;
-INODE *ip;
-DIR   *dp;   
-
 #define FREE 0
 #define READY 1
 
@@ -36,6 +31,12 @@ DIR   *dp;
 #define GD_BLOCK_OFFSET 2
 
 #define NUM_DIRECT_BLOCKS 12
+#define INDIRECT_BLOCK_NUMBER 13
+#define DOUBLE_INDIRECT_BLOCK_NUMBER 14
+#define I_BLOCKS 15
+
+#define BLOCK_NUMBERS_PER_BLOCK 256
+
 
 #define ROOT_INODE 2
 

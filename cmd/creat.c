@@ -3,9 +3,14 @@
 #include <string.h>
 #include <libgen.h>
 #include <time.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
 #include "../cmd.h"
 #include "../utils/search.h"
+#include "../utils/bitmap.h"
+#include "../utils/readwrite.h"
+#include "../utils/error_manager.h"
 
 extern MINODE *root;
 extern PROC *running;
@@ -92,7 +97,7 @@ int js_creat(int argc, char *argv[])
 		
 		
 		
-		parent_ino = get_inode_number(device, parent);
+		parent_ino = get_inode_number(parent);
 		if(parent_ino < 0)
 		{
 			set_error("File does not exist");
@@ -114,7 +119,7 @@ int js_creat(int argc, char *argv[])
 			set_error("Not a dir\n");
 			return -1;
 		}
-		if(get_inode_number(device, argv[i]) > 0)
+		if(get_inode_number(argv[i]) > 0)
 		{
 			put_minode(parent_mip);
 			free(pathname);

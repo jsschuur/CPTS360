@@ -1,6 +1,8 @@
 #include "cmd.h"
 
-
+#include "utils/error_manager.h"
+#include "utils/error_manager.h"
+#include <string.h>
 
 typedef struct cmd
 {

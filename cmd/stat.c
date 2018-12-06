@@ -3,9 +3,13 @@
 #include <string.h>
 #include <libgen.h>
 #include <time.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 #include "../cmd.h"
+#include "../utils/readwrite.h"
 #include "../utils/search.h"
+#include "../utils/error_manager.h"
 
 extern PROC *running;
 
@@ -19,7 +23,7 @@ int js_stat(int argc, char *argv[])
 
     for(i = 1; i < argc; i++)
     {
-    	ino = get_inode_number(device, argv[i]);
+    	ino = get_inode_number(argv[i]);
 	    if(ino < 0)
 	    {
 	    	set_error("File does not exist");
