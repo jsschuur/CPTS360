@@ -14,16 +14,6 @@ Throws errors?: -native
 int search(MINODE *mip, const char *name);
 
 /*-----------------------------------------
-Function: does_exist
-Use: searches mip for file 'name', returns
-	 0 if found, 1 if not, identical to search
-	 in implementation
-Throws errors?: -native
-				-get_block
------------------------------------------*/
-int does_exist(MINODE *mip, const char *name);
-
-/*-----------------------------------------
 Function: get_inode_number
 Use: searches device 'dev' for file 'path'
 Throws errors?: -native

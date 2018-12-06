@@ -23,7 +23,6 @@ typedef struct ext2_dir_entry_2 DIR;
 
 #define BLOCK_SIZE 1024
 #define NMINODE    64
-#define NOFT       64
 #define NFD        16
 #define NMOUNT      4
 #define NPROC       2
@@ -32,14 +31,9 @@ typedef struct ext2_dir_entry_2 DIR;
 #define GD_BLOCK_OFFSET 2
 
 #define NUM_DIRECT_BLOCKS 12
-#define INDIRECT_BLOCK_NUMBER 12
-#define DOUBLE_INDIRECT_BLOCK_NUMBER 13
+#define INDIRECT_BLOCK_NUMBER 13
+#define DOUBLE_INDIRECT_BLOCK_NUMBER 14
 #define I_BLOCKS 15
-
-#define READ 0
-#define WRITE 1
-#define READ_WRITE 2
-#define APPEND 3
 
 #define BLOCK_NUMBERS_PER_BLOCK 256
 

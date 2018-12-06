@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <libgen.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 
 #include "../utils/readwrite.h"
@@ -17,7 +18,7 @@ extern PROC *running;
 int js_unlink(int argc, char *argv[])
 {
 	int device = running->cwd->dev, inode_number, parent_ino, i, j;
-	char *path, *parent, *child;
+	char *childc, *parentc, *parent, *child;
 	MINODE *mip, *parent_mip;
 
 	if(argc < 2)
@@ -36,16 +37,11 @@ int js_unlink(int argc, char *argv[])
 		}
 
 		mip = get_minode(device, inode_number);
-		if(thrown_error == TRUE)
-		{
-			put_minode(mip);
-			return -1;
-		}
 
 		if(S_ISDIR(mip->ip.i_mode))
 		{
-			put_minode(mip);
 			set_error("unlink: cannot unlink dir");
+			put_minode(mip);
 			return -1;
 		}
 
@@ -61,17 +57,7 @@ int js_unlink(int argc, char *argv[])
 
 		if(mip->ip.i_links_count == 0 && !S_ISLNK(mip->ip.i_mode))
 		{
-			//assume direct blocks
-			for(j = 0; j < NUM_DIRECT_BLOCKS && mip->ip.i_block[j] != 0; j++)
-			{
-				deallocate_block(device, mip->ip.i_block[j]);
-				if(thrown_error == TRUE)
-				{	 
-					put_minode(mip);       	
-					return -1;
-				}
-			}
-			deallocate_inode(device, inode_number);	
+			clear_blocks(mip);
 		}
 		//if symbolic link, deallocate inode
 		else if(S_ISLNK(mip->ip.i_mode))
@@ -79,28 +65,35 @@ int js_unlink(int argc, char *argv[])
 			deallocate_inode(device, inode_number);
 		}
 
-		path = strdup(argv[i]);
-		if(check_null_ptr(path))
-		{
-			return -1;
-		}
+		childc = strdup(argv[i]);
+		parentc = strdup(argv[i]);
 
-		child = basename(path);
-		parent = dirname(path);
+		child = basename(childc);
+		parent = dirname(parentc);
+
+
 
 		parent_ino = get_inode_number(parent);
 		if(parent_ino < 0)
 		{
+			free(childc);
+			free(parentc);
 			set_error("File does not exist");
 			return -1;
 		}
 
 		parent_mip = get_minode(device, parent_ino);
 
+		clear_blocks(mip);
 		remove_dir_entry(parent_mip, child);
+
+		free(childc);
+		free(parentc);
 		
 		put_minode(parent_mip);
 		put_minode(mip);
+
+		i++;
 
 	}
 	return 0;

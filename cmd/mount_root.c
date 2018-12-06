@@ -1,6 +1,9 @@
 #include <stdlib.h>
-
+#include <stdio.h>
 #include "../cmd.h"
+
+#include "../utils/bitmap.h"
+
 
 #include "../utils/error_manager.h"
 #include "../utils/readwrite.h"
@@ -11,6 +14,7 @@
 extern MINODE minodes[NMINODE];
 extern MINODE *root;
 extern PROC proc[NPROC], *running;
+extern OFT oft[NOFT];
 
 extern int block_bitmap, inode_bitmap, inode_table_block;
 extern int nblocks, ninodes, block_size, inode_size, inodes_per_block, iblk;
@@ -22,10 +26,11 @@ int mount_root(int dev)
 {
 	char buf[BLOCK_SIZE];
 	
-	int i;
+	int i, j;
 	error_message = "";
   	MINODE *mip;
   	PROC   *p;
+  	OFT *ofp;
 
   	for (i=0; i<NMINODE; i++)
   	{
@@ -44,6 +49,18 @@ int mount_root(int dev)
       	p->cwd = NULL;
       	p->next = NULL;
       	p->cwd = 0;
+      	for(j = 0; j < NFD; j++)
+      	{
+      		p->fd[j] = NULL;
+      	}
+  	}
+  	for(i = 0; i < NOFT; i++)
+  	{
+  		ofp = &oft[i];
+  		ofp->mode = 0;
+  		ofp->refCount = 0;
+  		ofp->mptr = NULL;
+  		ofp->offset = 0;
   	}
 
   	//get and record super block
@@ -68,6 +85,15 @@ int mount_root(int dev)
 	inode_bitmap = gp->bg_inode_bitmap;
 	inode_table_block = gp->bg_inode_table;
 	inodes_per_block = block_size / inode_size;
+
+  get_block(dev, block_bitmap, buf);
+
+  for (i=0; i < nblocks; i++){
+    (test_bit(buf, i)) ? putchar('1') : putchar('0');
+    if (i && (i % 8)==0)
+       printf(" ");
+  }
+  printf("\n");
 
 	root = get_minode(dev, ROOT_INODE);
 	root->refCount++;

@@ -18,8 +18,11 @@ int check_null_ptr(void *ptr)
 
 void set_error(char *message)
 {
-	thrown_error = TRUE;
-	error_message = message;
+	if(thrown_error == FALSE)
+	{
+		thrown_error = TRUE;
+		error_message = message;
+	}
 }
 
 void print_error()

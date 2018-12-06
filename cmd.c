@@ -2,6 +2,7 @@
 
 #include "utils/error_manager.h"
 #include "utils/error_manager.h"
+
 #include <string.h>
 
 typedef struct cmd
@@ -25,6 +26,12 @@ static const CMD commands[] =
     { "chown"   , &js_chown   },
     { "stat"    , &js_stat    },
     { "touch"   , &js_touch   },
+    { "open"    , &js_open    },
+    { "pfd"     , &js_pfd     },
+    { "close"   , &js_close   },
+    { "lseek"   , &js_lseek   },
+    { "cat"     , &js_cat     },
+    { "cp"      , &js_cp      }
 };
 
 int invalid_command(int argc, char* argv[])

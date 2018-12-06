@@ -22,15 +22,14 @@ int my_mkdir(MINODE *parent_mip, char *name)
 {
 	int inode_number, block_number, device = parent_mip->dev, i;
 	char buf[BLOCK_SIZE], *current_ptr;
-	MINODE *mip; INODE *ip;
+	MINODE *mip;
 	DIR *dp;
 
 	inode_number = allocate_inode(device);
 	block_number = allocate_block(device);
 
 
-	mip = get_minode(device, inode_number);
-	ip = &mip->ip;
+	mip = get_minode(device, inode_number);;
 
 	mip->ip.i_mode = 0x41ED;
 	mip->ip.i_uid  = running->uid;	
@@ -98,10 +97,6 @@ int js_mkdir(int argc, char *argv[])
 
 		child = basename(basec);
 		parent = dirname(dirc);
-
-
-		
-		
 		
 		parent_ino = get_inode_number(parent);
 		if(parent_ino < 0)

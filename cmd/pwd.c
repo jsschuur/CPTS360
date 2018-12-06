@@ -32,10 +32,6 @@ int rpwd(MINODE *mip, char **path, int size)
 	} 
 
 	get_block(device, mip->ip.i_block[0], buf);
-	if(thrown_error == TRUE)
-	{        	
-		return -1;
-	}
 
 	cp = buf;
 	dp = (DIR*)buf;
@@ -48,23 +44,10 @@ int rpwd(MINODE *mip, char **path, int size)
 	parent_ino = dp->inode;
 
 	parent_mip = get_minode(device, parent_ino);
-	if(thrown_error == TRUE)
-	{        	
-		return -1;
-	}
 
 	rpwd(parent_mip, path, size);
-	if(thrown_error == TRUE)
-	{
-		put_minode(mip);
-		return -1;
-	}
 
 	find_my_name(parent_mip, my_ino, &my_name);
-	if(thrown_error == TRUE)
-	{        	
-		return -1;
-	}
 
 	while(strlen(*path) + strlen(my_name) + 3 > size)
 	{

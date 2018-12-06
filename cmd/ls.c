@@ -54,29 +54,28 @@ void ls_file(MINODE *mip, char *name)
 }
 void ls_dir(MINODE *mip)
 {
-	char buf[BLOCK_SIZE], *cp, name[256];
+	char buf[BLOCK_SIZE], buf_ind[BLOCK_SIZE], buf_double[BLOCK_SIZE], *current_ptr, name[256];
 	DIR *dp;
-	INODE *ip = &mip->ip;
+	INODE *parent_ip = &mip->ip;
 	MINODE *dir_entry_mip;
-	int i, dev = mip->dev;
+	int i, dev = mip->dev, ind_index, double_index;
+	int *indirect, *double_indirect;
 
+
+	//direct blocks
 	for(i = 0; i < NUM_DIRECT_BLOCKS; i++)
 	{
-		if (ip->i_block[i] == 0)
+		if(parent_ip->i_block[i] == 0)
 		{
-            break;
+			continue;
 		}
 
-        get_block(dev, ip->i_block[i], buf);
-        if(thrown_error == TRUE)
-		{	
-			return;
-		}
+		get_block(dev, parent_ip->i_block[i], buf);
 
-        cp = buf;
+        current_ptr = buf;
         dp = (DIR*)buf;
 
-        while(cp < buf + block_size)
+        while(current_ptr < buf + block_size)
         {
         	//dont print '.' and '..' entries
         	if(((strncmp(dp->name, ".", dp->name_len)) != 0) && 
@@ -89,14 +88,95 @@ void ls_dir(MINODE *mip)
         		ls_file(dir_entry_mip, name);
         		
         		put_minode(dir_entry_mip);
-        	    if(thrown_error == TRUE)
-				{	
-					return;
-				}
         	}        	   
-        	cp += dp->rec_len;
-        	dp = (DIR*)cp;
-        }
+        	current_ptr += dp->rec_len;
+        	dp = (DIR*)current_ptr;
+		}
+	}
+
+	//indirect blocks
+	if(parent_ip->i_block[INDIRECT_BLOCK_NUMBER])
+	{
+		get_block(dev, parent_ip->i_block[INDIRECT_BLOCK_NUMBER], buf_ind);
+		indirect = (int *)buf_ind;
+
+		for(ind_index = 0; ind_index < BLOCK_NUMBERS_PER_BLOCK; ind_index++)
+		{
+			if(indirect[i] == 0)
+			{
+				continue;
+			}
+
+			get_block(dev, indirect[i], buf);
+
+	        current_ptr = buf;
+	        dp = (DIR*)buf;
+
+	        while(current_ptr < buf + block_size)
+	        {
+	        	//dont print '.' and '..' entries
+	        	if(((strncmp(dp->name, ".", dp->name_len)) != 0) && 
+	        		((strncmp(dp->name, "..", dp->name_len)) != 0))
+	        	{
+	        		strncpy(name, dp->name, dp->name_len);
+	        		name[dp->name_len] = 0;
+
+	        		dir_entry_mip = get_minode(dev, dp->inode);
+	        		ls_file(dir_entry_mip, name);
+	        		
+	        		put_minode(dir_entry_mip);
+	        	}        	   
+	        	current_ptr += dp->rec_len;
+	        	dp = (DIR*)current_ptr;
+			}
+		}
+	}
+	//double indirect blocks
+	if(parent_ip->i_block[DOUBLE_INDIRECT_BLOCK_NUMBER])
+	{
+		get_block(dev, parent_ip->i_block[DOUBLE_INDIRECT_BLOCK_NUMBER], buf_double);
+		double_indirect = (int *)buf_double;
+
+		for(double_index = 0; double_index < BLOCK_NUMBERS_PER_BLOCK; double_index++)
+		{
+			if(double_indirect[double_index] == 0)
+			{
+				continue;
+			}
+
+			get_block(dev, double_indirect[double_index], buf_ind);
+			indirect = (int *)buf_ind;
+
+			for(ind_index = 0; ind_index < BLOCK_NUMBERS_PER_BLOCK; ind_index++)
+			{
+				if(indirect[i] == 0)
+				{
+					continue;
+				}
+				get_block(dev, indirect[i], buf);
+
+				current_ptr = buf;
+		        dp = (DIR*)buf;
+
+		        while(current_ptr < buf + block_size)
+		        {
+		        	//dont print '.' and '..' entries
+		        	if(((strncmp(dp->name, ".", dp->name_len)) != 0) && 
+		        		((strncmp(dp->name, "..", dp->name_len)) != 0))
+		        	{
+		        		strncpy(name, dp->name, dp->name_len);
+		        		name[dp->name_len] = 0;
+
+		        		dir_entry_mip = get_minode(dev, dp->inode);
+		        		ls_file(dir_entry_mip, name);
+		        		
+		        		put_minode(dir_entry_mip);
+		        	}        	   
+		        	current_ptr += dp->rec_len;
+		        	dp = (DIR*)current_ptr;
+				}
+			}
+		}
 	}
 }
 
@@ -121,11 +201,6 @@ int js_ls(int argc, char *argv[])
 		}
 
 		mip = get_minode(device, ino);
-		if(thrown_error == TRUE)
-		{	
-			put_minode(mip);
-			return -1;
-		}
 
 		if(S_ISDIR(mip->ip.i_mode))
 		{

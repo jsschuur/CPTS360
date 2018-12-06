@@ -11,58 +11,11 @@
 #include "../utils/bitmap.h"
 #include "../utils/readwrite.h"
 #include "../utils/error_manager.h"
+#include "../utils/file.h"
 
 extern MINODE *root;
 extern PROC *running;
 extern int block_size;
-
-int creat_file(MINODE *parent_mip, char *name)
-{
-	int inode_number, block_number, device = parent_mip->dev, i;
-	char buf[BLOCK_SIZE], *current_ptr;
-	MINODE *mip;
-	INODE *ip;
-	DIR *dp;
-
-	inode_number = allocate_inode(device);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	mip = get_minode(device, inode_number);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	ip = &mip->ip;
-
-	ip->i_mode = 0100664;
-	ip->i_uid  = running->uid;	
- 	ip->i_gid  = running->gid;	
-  	ip->i_size = 0;		
-  	ip->i_links_count = 1;	       
-	ip->i_atime = ip->i_ctime = ip->i_mtime = time(0L);  
-	ip->i_blocks = 0;                	
-	
-	for(i = 0; i < 15; i++)
-	{
-		ip->i_block[i] = 0;
-	}
-
-	mip->dirty = TRUE;
-	
-	put_minode(mip);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
-	enter_dir_entry(parent_mip, inode_number, name);
-
-	return inode_number;
-}
 
 int js_creat(int argc, char *argv[])
 {

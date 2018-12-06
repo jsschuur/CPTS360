@@ -6,10 +6,9 @@
 
 #include "cmd.h"
 
-
-MINODE minodes[NMINODE];
-MINODE *root;
 PROC   proc[NPROC], *running;
+MINODE minodes[NMINODE], *root;
+OFT oft[NOFT];
 
 int block_bitmap, inode_bitmap, inode_table_block;
 int nblocks, ninodes, block_size, inode_size, inodes_per_block;

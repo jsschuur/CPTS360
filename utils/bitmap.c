@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "bitmap.h"
 
@@ -8,6 +9,8 @@
 
 extern SUPER *sp;
 extern GD *gp;
+
+extern int block_bitmap, inode_bitmap, nblocks, ninodes;
 
 int test_bit(char *buf, int bit)
 {
@@ -101,7 +104,10 @@ int allocate_block(int dev)
 			decFreeBlocks(dev);
 
 			put_block(dev, block_bitmap, buf);
-			return i + 1;
+
+			clear_block(dev, i);
+
+			return i;
 		}
 	}
 	set_error("No more free blocks");
@@ -152,9 +158,6 @@ int deallocate_block(int dev, int block)
 
 	put_block(dev, block_bitmap, buf);
 
-	memset(buf, 0, BLOCK_SIZE);
-	put_block(dev, block, buf);
-
 	return 0;
 }
 
@@ -167,16 +170,19 @@ int deallocate_inode(int dev, int ino)
 		return -1;
 	}
 
-	get_block(dev, block_bitmap, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
-
+	get_block(dev, inode_bitmap, buf);
 	clear_bit(buf, ino);
 	incFreeInodes(dev);
 
 	put_block(dev, inode_bitmap, buf);
 
 	return 0;
+}
+
+void clear_block(int dev, int block)
+{
+	char buf[BLOCK_SIZE];
+	get_block(dev, block, buf);
+	memset(buf, 0, BLOCK_SIZE);
+	put_block(dev, block, buf);
 }

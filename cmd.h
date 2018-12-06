@@ -1,7 +1,7 @@
 #ifndef _CMD_
 #define _CMD_
 
-#define COMMAND_COUNT 13
+#define COMMAND_COUNT 19
 
 #include "utils/type.h"
 
@@ -28,8 +28,14 @@ int js_chown(int argc, char *argv[]);
 int js_stat(int argc, char *argv[]);
 int js_touch(int argc, char *argv[]);
 
+//level2
+int js_open(int argc, char *argv[]);
+int js_close(int argc, char *argv[]);
+int js_pfd(int argc, char *argv[]);
+int js_lseek(int argc, char *argv[]);
+int js_cat(int argc, char *argv[]);
+int js_cp(int argc, char *argv[]);
 
-int creat_file(MINODE *parent_mip, char *name);
 
 
 #endif
