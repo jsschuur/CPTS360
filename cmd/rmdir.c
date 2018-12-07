@@ -58,7 +58,7 @@ int js_rmdir(int argc, char *argv[])
 			return -1;
 		}
 
-		if(mip->ip.i_links_count > 2)
+		if(mip->ip.i_links_count >= 2)
 		{
 			set_error("Directory not empty");
 			put_minode(mip);

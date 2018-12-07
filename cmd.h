@@ -1,7 +1,7 @@
 #ifndef _CMD_
 #define _CMD_
 
-#define COMMAND_COUNT 19
+#define COMMAND_COUNT 23
 
 #include "utils/type.h"
 
@@ -14,6 +14,8 @@ int invalid_command(int argc, char *argv[]);
 //level 1
 int mount_root();
 
+int js_menu(int argc, char *argv[]);
+int js_quit(int argc, char *argv[]);
 int js_ls(int argc, char *argv[]);
 int js_cd(int argc, char *argv[]);
 int js_pwd(int argc, char *argv[]);
@@ -35,7 +37,8 @@ int js_pfd(int argc, char *argv[]);
 int js_lseek(int argc, char *argv[]);
 int js_cat(int argc, char *argv[]);
 int js_cp(int argc, char *argv[]);
-
+int js_read(int argc, char *argv[]);
+int js_write(int argc, char *argv[]);
 
 
 #endif

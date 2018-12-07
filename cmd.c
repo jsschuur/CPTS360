@@ -31,7 +31,11 @@ static const CMD commands[] =
     { "close"   , &js_close   },
     { "lseek"   , &js_lseek   },
     { "cat"     , &js_cat     },
-    { "cp"      , &js_cp      }
+    { "cp"      , &js_cp      },
+    { "read"    , &js_read    },
+    { "write"   , &js_write   },
+    { "quit"    , &js_quit    },
+    { "menu"    , &js_menu    }
 };
 
 int invalid_command(int argc, char* argv[])
