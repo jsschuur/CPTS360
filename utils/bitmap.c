@@ -12,16 +12,15 @@ extern GD *gp;
 
 extern int block_bitmap, inode_bitmap, nblocks, ninodes;
 
-int test_bit(char *buf, int bit)
+int test_bit(char* buf, int bit)
 {
-	int byte = bit / 8;
-	bit = bit % 8;
-	
-	if (buf[byte] & (1 << bit))
-	{
-		return 1;
-	}
-	return 0;
+    int byte = bit / 8; 
+    bit %= 8;
+
+    if (buf[byte] & (1 << bit))
+        return 1;
+    else
+        return 0;
 }
 
 void set_bit(char *buf, int bit)
@@ -105,9 +104,9 @@ int allocate_block(int dev)
 
 			put_block(dev, block_bitmap, buf);
 
-			clear_block(dev, i);
+			clear_block(dev, i + 1);
 
-			return i;
+			return i + 1;
 		}
 	}
 	set_error("No more free blocks");
@@ -153,7 +152,7 @@ int deallocate_block(int dev, int block)
 		return -1;
 	}
 
-	clear_bit(buf, block);
+	clear_bit(buf, block - 1);
 	incFreeBlocks(dev);
 
 	put_block(dev, block_bitmap, buf);
@@ -171,7 +170,7 @@ int deallocate_inode(int dev, int ino)
 	}
 
 	get_block(dev, inode_bitmap, buf);
-	clear_bit(buf, ino);
+	clear_bit(buf, ino - 1);
 	incFreeInodes(dev);
 
 	put_block(dev, inode_bitmap, buf);

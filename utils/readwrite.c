@@ -266,14 +266,10 @@ int enter_dir_entry(MINODE *parent_mip, int inode_number, char *name)
 
 
 	block_number = allocate_block(device);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
 
 	assign_first_empty_bno(parent_mip, block_number);
 	parent_ip->i_size += block_size;
-	parent_ip->i_blocks -= block_size / 512;
+	parent_ip->i_blocks += block_size / 512;
 	parent_mip->dirty = TRUE;
 
 	get_block(device, block_number, buf);
@@ -288,10 +284,7 @@ int enter_dir_entry(MINODE *parent_mip, int inode_number, char *name)
 	strcpy(dp->name, name);
 
 	put_block(device, block_number, buf);
-	if(thrown_error == TRUE)
-	{
-		return -1;
-	}
+
 	return 0;
 }
 
@@ -474,7 +467,6 @@ int clear_blocks(MINODE *mip)
 		{
 			continue;
 		}
-		printf("deallocating block: %d\n", mip->ip.i_block[indirect_sentinel]);
 		deallocate_block(device, mip->ip.i_block[indirect_sentinel]);
 		mip->ip.i_block[indirect_sentinel] = 0;
 	}
@@ -491,7 +483,6 @@ int clear_blocks(MINODE *mip)
 			{
 				continue;
 			}
-			printf("deallocating block: %d\n", mip->ip.i_block[indirect_sentinel]);
 			deallocate_block(device, indirect_block[indirect_sentinel]);
 		}
 		deallocate_block(device, mip->ip.i_block[INDIRECT_BLOCK_NUMBER]);
@@ -523,7 +514,6 @@ int clear_blocks(MINODE *mip)
 				{
 					continue;
 				}
-				printf("deallocating block: %d\n", mip->ip.i_block[double_indirect_sentinel]);
 				deallocate_block(device, indirect_block[double_indirect_sentinel]);
 			}
 
